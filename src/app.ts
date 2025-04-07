@@ -4,9 +4,9 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
-import typeDefs from './typeDefs/index.js';
-import resolvers from './resolvers/index.js';
-import connectDB from "./db/connectDB.js"
+import typeDefs from './typeDefs/index';
+import resolvers from './resolvers/index';
+import connectDB from "./db/connectDB"
 import dotenv from "dotenv"
 
 dotenv.config({
@@ -31,7 +31,7 @@ const startServer = async () => {
     cors(),
     express.json(),
     expressMiddleware(server, {
-      context: () => ({}),
+      context: async() => ({}),
     })
   );
 
