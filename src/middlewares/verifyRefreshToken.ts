@@ -18,13 +18,16 @@ export const verifyRefreshToken = async (req: Request) => {
     ) as CustomJwtPayload;
 
     const existingUser = await UserModel.findById(decoded?._id).select(
-      "-password -refreshToken"
+      "-password"
     );
 
     if (!existingUser) {
       return null;
     }
 
+    if (existingUser.refreshToken != token) {
+      return null;
+    }
     return existingUser;
   } catch (error) {
     return null;
