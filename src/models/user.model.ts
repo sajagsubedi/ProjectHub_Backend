@@ -6,10 +6,10 @@ interface User extends Document {
   username: string;
   email: string;
   fullName: string;
-  avatar: {
-    url: string;
-    public_id: string;
-  };
+  // avatar: {
+  //   url: string;
+  //   public_id: string;
+  // };
   password: string;
   refreshToken?: string;
   isPasswordCorrect(password: string): Promise<boolean>;
@@ -40,16 +40,16 @@ const userSchema = new mongoose.Schema<User>(
       trim: true,
       index: true,
     },
-    avatar: {
-      url: {
-        type: String,
-        required: true,
-      },
-      public_id: {
-        type: String,
-        required: true,
-      },
-    },
+    // avatar: {
+    //   url: {
+    //     type: String,
+    //     required: true,
+    //   },
+    //   public_id: {
+    //     type: String,
+    //     required: true,
+    //   },
+    // },
     password: {
       type: String,
       required: [true, "Password is required"],
