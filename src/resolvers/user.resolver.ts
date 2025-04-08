@@ -1,11 +1,12 @@
 import User from "../models/user.model";
-import { SignupDataType } from "../types/user.types";
+import { SignupInputType, SigninInputType } from "../types/user.types";
 import { ApiError } from "../utils/ApiError";
+import { Response } from "express";
 
 const userResolver = {
   Query: {},
   Mutation: {
-    signup: async (_: any, args: SignupDataType) => {
+    signup: async (_: any, args: SignupInputType) => {
       try {
         const { fullName, email, username, password, confpassword } = args;
 
@@ -53,6 +54,86 @@ const userResolver = {
           success: true,
           message: "User created successfully",
           user: createdUser,
+        };
+      } catch (error) {
+        //log the error to the console for debugging
+        console.log("Error creating user:", error);
+
+        //send error response
+        if (error instanceof ApiError) {
+          return {
+            success: false,
+            message: error.message,
+          };
+        }
+
+        return {
+          success: false,
+          message: "Something went wrong",
+        };
+      }
+    },
+    signin: async (
+      _: any,
+      args: SigninInputType,
+      { res }: { res: Response }
+    ) => {
+      try {
+        const { identifier, password } = args;
+
+        //check if any of the fields are empty
+        if (
+          [identifier, password].some(
+            (field) => field == null || field.trim() === ""
+          )
+        ) {
+          throw new ApiError(400, "All fields are required");
+        }
+
+        //check if the user exists with the same username or email
+        const existingUser = await User.findOne({
+          $or: [{ username: identifier }, { email: identifier }],
+        });
+        if (!existingUser) {
+          throw new ApiError(
+            400,
+            "User does not exist with the same username or email"
+          );
+        }
+
+        //check if the password is correct
+        const isPasswordCorrect = await existingUser.isPasswordCorrect(
+          password
+        );
+        if (!isPasswordCorrect) {
+          throw new ApiError(400, "Incorrect password");
+        }
+
+        //generate access token and refresh token
+        const accessToken = existingUser.generateAccessToken();
+        const refreshToken = existingUser.generateRefreshToken();
+
+        //update the refresh token in the database
+        existingUser.refreshToken = refreshToken;
+        await existingUser.save();
+
+        const cookieOptions = {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+        };
+
+        //set the refresh token in the cookie
+        res.cookie("refreshToken", refreshToken, cookieOptions);
+
+        //set the access token in the cookie
+        res.cookie("accessToken", accessToken, cookieOptions);
+
+        //send response
+        return {
+          success: true,
+          message: "User signed in successfully",
+          refreshToken,
+          accessToken,
         };
       } catch (error) {
         //log the error to the console for debugging

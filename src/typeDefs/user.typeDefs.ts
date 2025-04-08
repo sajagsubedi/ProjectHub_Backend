@@ -30,6 +30,13 @@ const userTypeDef = `
     updatedAt: String
   }
 
+  type SigninResponse {
+    success: Boolean!
+    message: String!
+    refreshToken: String!
+    accessToken: String!
+  }
+
   type Mutation {
     signup(
       fullName: String!
@@ -38,7 +45,10 @@ const userTypeDef = `
       password: String!
       confpassword: String!
     ): SignupResponse!
-    
+    signin(
+      identifier: String!
+      password: String!
+    ): SigninResponse!
   }
 `;
 

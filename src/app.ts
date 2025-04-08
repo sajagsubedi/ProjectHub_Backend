@@ -8,6 +8,7 @@ import typeDefs from "./typeDefs/index";
 import resolvers from "./resolvers/index";
 import connectDB from "./db/connectDB";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 dotenv.config({
   path: "./.env",
@@ -28,10 +29,11 @@ const startServer = async () => {
 
   app.use(
     "/graphql",
+    cookieParser(),
     cors(),
     express.json(),
     expressMiddleware(server, {
-      context: async () => ({}),
+      context: async ({ req, res }) => ({ req, res }),
     })
   );
 
