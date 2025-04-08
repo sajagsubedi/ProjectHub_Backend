@@ -9,6 +9,7 @@ import resolvers from "./resolvers/index";
 import connectDB from "./db/connectDB";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import { verifyAuth } from "./middlewares/verifyAuth";
 
 dotenv.config({
   path: "./.env",
@@ -33,7 +34,10 @@ const startServer = async () => {
     cors(),
     express.json(),
     expressMiddleware(server, {
-      context: async ({ req, res }) => ({ req, res }),
+      context: async ({ req, res }) => {
+        const user = await verifyAuth(req); //getting the user from the token
+        return { req, res, user };
+      },
     })
   );
 

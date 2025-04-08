@@ -37,6 +37,11 @@ const userTypeDef = `
     accessToken: String!
   }
 
+  type SignoutResponse {
+    success: Boolean!
+    message: String!
+  }
+
   type Mutation {
     signup(
       fullName: String!
@@ -49,6 +54,7 @@ const userTypeDef = `
       identifier: String!
       password: String!
     ): SigninResponse!
+    signout:SignoutResponse!
   }
 `;
 

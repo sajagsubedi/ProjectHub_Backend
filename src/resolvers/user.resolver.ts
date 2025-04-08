@@ -1,7 +1,8 @@
+import { verifyRefreshToken } from "../middlewares/verifyRefreshToken";
 import User from "../models/user.model";
 import { SignupInputType, SigninInputType } from "../types/user.types";
 import { ApiError } from "../utils/ApiError";
-import { Response } from "express";
+import { Response, Request } from "express";
 
 const userResolver = {
   Query: {},
@@ -147,6 +148,62 @@ const userResolver = {
           };
         }
 
+        return {
+          success: false,
+          message: "Something went wrong",
+        };
+      }
+    },
+    signout: async (
+      _: any,
+      __: any,
+      { req, res }: { req: Request; res: Response }
+    ) => {
+      try {
+        //fetch the user
+        const user = await verifyRefreshToken(req);
+
+        if (!user) {
+          return {
+            success: false,
+            message: "You are not logged in",
+          };
+        }
+
+        //update the refresh token in the database
+        await User.findByIdAndUpdate(
+          user._id,
+          {
+            $unset: {
+              refreshToken: 1,
+            },
+          },
+          {
+            new: true,
+          }
+        );
+
+        const cookieOptions = {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+        };
+
+        //clear the refresh token cookie
+        res.clearCookie("refreshToken", cookieOptions);
+
+        //clear the access token cookie
+        res.clearCookie("accessToken", cookieOptions);
+
+        //send response
+        return {
+          success: true,
+          message: "User signed out successfully",
+        };
+      } catch (error) {
+        //log the error to the console for debugging
+        console.log("Error signing out user:", error);
+
+        //send error response
         return {
           success: false,
           message: "Something went wrong",
