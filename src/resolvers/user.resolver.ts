@@ -1,5 +1,5 @@
 import { verifyRefreshToken } from "../middlewares/verifyRefreshToken";
-import User from "../models/user.model";
+import UserModel, { User } from "../models/user.model";
 import { SignupInputType, SigninInputType } from "../types/user.types";
 import { ApiError } from "../utils/ApiError";
 import { Response, Request } from "express";
@@ -26,7 +26,7 @@ const userResolver = {
         }
 
         //check if the user already exists with the same username or email
-        const existingUser = await User.findOne({
+        const existingUser = await UserModel.findOne({
           $or: [{ username }, { email }],
         });
         if (existingUser) {
@@ -37,10 +37,15 @@ const userResolver = {
         }
 
         //create the user
-        const user = await User.create({ fullName, username, email, password });
+        const user = await UserModel.create({
+          fullName,
+          username,
+          email,
+          password,
+        });
 
         //fetch the created user without password and refreshToken
-        const createdUser = await User.findById(user._id).select(
+        const createdUser = await UserModel.findById(user._id).select(
           "-password -refreshToken"
         );
         if (!createdUser) {
@@ -92,7 +97,7 @@ const userResolver = {
         }
 
         //check if the user exists with the same username or email
-        const existingUser = await User.findOne({
+        const existingUser = await UserModel.findOne({
           $or: [{ username: identifier }, { email: identifier }],
         });
         if (!existingUser) {
@@ -164,14 +169,11 @@ const userResolver = {
         const user = await verifyRefreshToken(req);
 
         if (!user) {
-          return {
-            success: false,
-            message: "You are not logged in",
-          };
+          throw new ApiError(401, "You are not logged in");
         }
 
         //update the refresh token in the database
-        await User.findByIdAndUpdate(
+        await UserModel.findByIdAndUpdate(
           user._id,
           {
             $unset: {
@@ -201,9 +203,61 @@ const userResolver = {
         };
       } catch (error) {
         //log the error to the console for debugging
-        console.log("Error signing out user:", error);
+        console.log("Error creating user:", error);
 
         //send error response
+        if (error instanceof ApiError) {
+          return {
+            success: false,
+            message: error.message,
+          };
+        }
+
+        return {
+          success: false,
+          message: "Something went wrong",
+        };
+      }
+    },
+    refetchAccessToken: async (
+      _: any,
+      __: any,
+      { req, res }: { req: Request; res: Response }
+    ) => {
+      try {
+        //fetch the user
+        const existingUser = await verifyRefreshToken(req);
+
+        if (!existingUser) {
+          throw new ApiError(401, "You are not logged in");
+        }
+
+        //generate access token
+        const accessToken = existingUser.generateAccessToken();
+
+        const cookieOptions = {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+        };
+
+        //set the access token in the cookie
+        res.cookie("accessToken", accessToken, cookieOptions);
+
+        //send response
+        return {
+          success: true,
+          message: "Access token refetched successfully",
+          accessToken,
+        };
+      } catch (error) {
+        //log the error to the console for debugging
+        console.log("Error refetching access token:", error);
+        if (error instanceof ApiError) {
+          return {
+            success: false,
+            message: error.message,
+          };
+        }
         return {
           success: false,
           message: "Something went wrong",

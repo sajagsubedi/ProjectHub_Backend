@@ -18,7 +18,7 @@ const userTypeDef = `
   type SignupResponse {
     success: Boolean!
     message: String!
-    user: UserPublic!
+    user: UserPublic
   }
 
   type UserPublic {
@@ -33,13 +33,19 @@ const userTypeDef = `
   type SigninResponse {
     success: Boolean!
     message: String!
-    refreshToken: String!
-    accessToken: String!
+    refreshToken: String
+    accessToken: String
   }
 
   type SignoutResponse {
     success: Boolean!
     message: String!
+  }
+
+  type RefetchAccessTokenResponse {
+    success: Boolean!
+    message: String!
+    accessToken: String
   }
 
   type Mutation {
@@ -55,6 +61,7 @@ const userTypeDef = `
       password: String!
     ): SigninResponse!
     signout:SignoutResponse!
+    refetchAccessToken: RefetchAccessTokenResponse!
   }
 `;
 
