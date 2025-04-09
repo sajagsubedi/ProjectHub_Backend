@@ -11,8 +11,15 @@ const userTypeDef = `
     updatedAt: String
   }
 
+  type authUserResponse {
+    success: Boolean!
+    message: String!
+    isAuthenticated: Boolean!
+    user: UserPublic
+  }
+
   type Query {
-    user: User!
+    authUser: authUserResponse!
   }
 
   type SignupResponse {
@@ -54,7 +61,6 @@ const userTypeDef = `
       email: String!
       username: String!
       password: String!
-      confpassword: String!
     ): SignupResponse!
     signin(
       identifier: String!

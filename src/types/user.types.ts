@@ -3,7 +3,6 @@ export interface SignupInputType {
   email: string;
   username: string;
   password: string;
-  confpassword: string;
 }
 
 export interface SigninInputType {
