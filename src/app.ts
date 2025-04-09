@@ -10,42 +10,56 @@ import connectDB from "./db/connectDB";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { verifyAuth } from "./middlewares/verifyAuth";
+import { graphqlUploadExpress } from "graphql-upload-minimal";
 
 dotenv.config({
   path: "./.env",
 });
+
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const httpServer = http.createServer(app);
 
+// Apollo Server Setup
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  csrfPrevention: true,
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
 
-// Start the server
 const startServer = async () => {
   await server.start();
 
+  // File upload middleware - must come before expressMiddleware
   app.use(
-    "/graphql",
+    graphqlUploadExpress({
+      maxFileSize: 10000000, // 10MB limit
+    })
+  );
+
+  app.use(
+    "/apollo",
     cookieParser(),
-    cors(),
+    cors({
+      origin: "http://localhost:3000",
+      credentials: true,
+    }),
     express.json(),
     expressMiddleware(server, {
       context: async ({ req, res }) => {
-        const user = await verifyAuth(req); //getting the user from the token
+        const user = await verifyAuth(req);
         return { req, res, user };
       },
     })
   );
 
-  connectDB().then(() => {
-    httpServer.listen({ port: PORT }, () =>
-      console.log(`🚀 Server ready at http://localhost:${PORT}/`)
-    );
-  });
+  await connectDB();
+  httpServer.listen({ port: PORT }, () =>
+    console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`)
+  );
 };
 
-startServer();
+startServer().catch((error) => {
+  console.error("Server startup error:", error);
+});

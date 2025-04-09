@@ -1,11 +1,17 @@
 const userTypeDef = `
 #graphql
+type AvatarType {
+url: String!
+public_id: String!
+}
+
   type User {
     _id: ID!
     username: String!
     email: String!
     fullName: String!
     password: String!
+    avatar: AvatarType!
     refreshToken: String
     createdAt: String
     updatedAt: String
@@ -18,9 +24,7 @@ const userTypeDef = `
     user: UserPublic
   }
 
-  type Query {
-    authUser: authUserResponse!
-  }
+  scalar Upload
 
   type SignupResponse {
     success: Boolean!
@@ -33,6 +37,7 @@ const userTypeDef = `
     username: String!
     email: String!
     fullName: String!
+    avatar: AvatarType!
     createdAt: String
     updatedAt: String
   }
@@ -55,12 +60,18 @@ const userTypeDef = `
     accessToken: String
   }
 
+  
+  type Query {
+    authUser: authUserResponse!
+  }
+
   type Mutation {
     signup(
       fullName: String!
       email: String!
       username: String!
       password: String!
+      avatar:Upload!
     ): SignupResponse!
     signin(
       identifier: String!

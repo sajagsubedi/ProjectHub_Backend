@@ -3,8 +3,12 @@ import UserModel from "../models/user.model";
 import { SignupInputType, SigninInputType } from "../types/user.types";
 import { ApiError } from "../utils/ApiError";
 import { Response, Request } from "express";
+import { GraphQLUpload } from "graphql-upload-minimal";
+import cloudinary from "../utils/cloudinary";
+import { CloudinaryUploadResult } from "../types/upload.types";
 
 const userResolver = {
+  Upload: GraphQLUpload,
   Query: {
     authUser: async (_: any, __: any, { req }: { req: Request }) => {
       try {
@@ -52,65 +56,66 @@ const userResolver = {
   Mutation: {
     signup: async (_: any, args: SignupInputType) => {
       try {
-        const { fullName, email, username, password } = args;
+        const { fullName, email, username, password, avatar } = args;
 
-        //check if any of the fields are empty
+        // Input validation
         if (
-          [username, email, fullName, password].some(
-            (field) => field == null || field.trim() === ""
-          )
+          [username, email, fullName, password].some((field) => !field?.trim())
         ) {
           throw new ApiError(400, "All fields are required");
         }
+        if (!avatar) throw new ApiError(400, "Avatar is required");
 
-        //check if the user already exists with the same username or email
+        // Check for existing user
         const existingUser = await UserModel.findOne({
           $or: [{ username }, { email }],
         });
         if (existingUser) {
-          throw new ApiError(
-            400,
-            "User already exists with the given username or email"
-          );
+          throw new ApiError(400, "Username or email already exists");
         }
 
-        //create the user
+        // Handle avatar upload to Cloudinary
+        const { createReadStream } = await avatar;
+        const result = await new Promise<CloudinaryUploadResult>(
+          (resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+              { folder: "projecthub", resource_type: "image" }, // Specify resource_type for safety
+              (error, result) =>
+                error
+                  ? reject(error)
+                  : resolve(result as CloudinaryUploadResult)
+            );
+            createReadStream().pipe(uploadStream).on("error", reject);
+          }
+        );
+
+        // Create user
         const user = await UserModel.create({
           fullName,
           username,
           email,
           password,
+          avatar: { public_id: result.public_id, url: result.secure_url },
         });
 
-        //fetch the created user without password and refreshToken
         const createdUser = await UserModel.findById(user._id).select(
           "-password -refreshToken"
         );
-        if (!createdUser) {
-          throw new ApiError(
-            500,
-            "Something went wrong while creating the user"
-          );
-        }
+        if (!createdUser)
+          throw new ApiError(500, "Failed to fetch created user");
 
-        //send response
         return {
           success: true,
           message: "User registered successfully. Proceed to sign in",
           user: createdUser,
         };
       } catch (error) {
-        //send error response
-        if (error instanceof ApiError) {
-          return {
-            success: false,
-            message: error.message,
-          };
-        }
-
+        console.log(error);
         return {
           success: false,
-          message: "Something went wrong",
+          message:
+            error instanceof ApiError ? error.message : "Something went wrong",
+          user: null, // Ensure schema compliance
         };
       }
     },
