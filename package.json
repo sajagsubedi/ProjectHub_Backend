@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/app.js",
     "dev": "tsc-watch --onSuccess \"npm run start\"",
-    "build": " tsc --onSuccess \"npm run start\""
+    "build": "tsc"
   },
   "author": "Sajag Subedi",
   "license": "ISC",
