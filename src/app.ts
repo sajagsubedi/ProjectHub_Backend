@@ -39,7 +39,7 @@ const startServer = async () => {
   );
 
   app.use(
-    "/apollo",
+    "/graphql",
     cookieParser(),
     cors({
       origin: "http://localhost:3000",
