@@ -30,6 +30,7 @@ type Links {
 
 type Project {
   _id: ID!
+  userId: ID!
   projectName: String!
   description: String!
   motive: String
@@ -44,9 +45,15 @@ type Project {
   tutorials: [String]
 }
 
+type GetAllProjectsResponse {
+  success: Boolean
+  message: String
+  projects: [Project]
+}
+
 type Query {
-    getAllProjects: [Project!]!
-    getProjectById(id: ID!): Project
+  getAllProjects: GetAllProjectsResponse
+  getProjectById(id: ID!): Project
 }
 `;
 

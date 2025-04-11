@@ -17,6 +17,7 @@ enum StatusType {
 }
 
 export interface Project extends mongoose.Document {
+  userId: mongoose.Schema.Types.ObjectId;
   projectName: string;
   description?: string;
   motive?: string;
@@ -39,6 +40,11 @@ export interface Project extends mongoose.Document {
 
 const projectSchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     projectName: {
       type: String,
       required: true,
@@ -117,4 +123,6 @@ const projectSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Project", projectSchema);
+const ProjectModel = mongoose.model<Project>("Project", projectSchema);
+
+export default ProjectModel;
