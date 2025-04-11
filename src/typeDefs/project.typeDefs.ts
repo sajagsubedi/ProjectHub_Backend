@@ -53,7 +53,7 @@ type GetAllProjectsResponse {
 
 type Query {
   getAllProjects: GetAllProjectsResponse
-  getProjectById(id: ID!): Project
+  getProjectById(id: ID!): singleProjectResponse
 }
 
 
@@ -73,10 +73,10 @@ type Mutation {
     deadLine: String
     links: LinksInput
     tutorials: [String]
-  ): createProjectResponse
+  ): singleProjectResponse
 }
   
-type createProjectResponse{
+type singleProjectResponse{
 message:String
 success:Boolean
 Project:Project
