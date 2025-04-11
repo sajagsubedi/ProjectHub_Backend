@@ -1,20 +1,5 @@
 import mongoose from "mongoose";
-
-enum CategoryType {
-  Web = "Web",
-  Mobile = "Mobile",
-  AI = "AI",
-  DataScience = "Data Science",
-  Other = "Other",
-}
-enum StatusType {
-  Idea = "Idea",
-  Designing = "Designing",
-  Pending = "Pending",
-  InProgress = "InProgress",
-  Closed = "Closed",
-  Open = "Open",
-}
+import { CategoryType, StatusType } from "../types/project.types";
 
 export interface Project extends mongoose.Document {
   userId: mongoose.Schema.Types.ObjectId;

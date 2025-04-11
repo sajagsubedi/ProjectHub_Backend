@@ -55,6 +55,32 @@ type Query {
   getAllProjects: GetAllProjectsResponse
   getProjectById(id: ID!): Project
 }
-`;
+
+
+input LinksInput {
+  source: String
+  deployment: String
+}
+
+type Mutation {
+  createProject(
+    projectName: String!
+    description: String!
+    motive: String
+    techStack: [String]
+    features: [String]
+    startDate: String
+    deadLine: String
+    links: LinksInput
+    tutorials: [String]
+  ): createProjectResponse
+}
+  
+type createProjectResponse{
+message:String
+success:Boolean
+Project:Project
+
+}`;
 
 export default projectTypeDefs;
