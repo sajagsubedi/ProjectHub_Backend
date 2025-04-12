@@ -43,19 +43,14 @@ type Project {
   draftUi: [DraftUi]
   links: Links
   tutorials: [String]
-}
-
-type GetAllProjectsResponse {
-  success: Boolean
-  message: String
-  projects: [Project]
+  isPinned: Boolean
 }
 
 type Query {
-  getAllProjects: GetAllProjectsResponse
-  getProjectById(id: ID!): singleProjectResponse
+  getAllProjects: [Project]
+  getProjectById(id: ID!): Project
+  getPinnedProjects: [Project]
 }
-
 
 input LinksInput {
   source: String
@@ -73,14 +68,7 @@ type Mutation {
     deadLine: String
     links: LinksInput
     tutorials: [String]
-  ): singleProjectResponse
-}
-  
-type singleProjectResponse{
-message:String
-success:Boolean
-Project:Project
-
+  ): Project
 }`;
 
 export default projectTypeDefs;

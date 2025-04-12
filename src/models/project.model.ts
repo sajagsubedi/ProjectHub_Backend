@@ -21,6 +21,7 @@ export interface Project extends mongoose.Document {
     deployment?: string;
   };
   tutorials?: string[];
+  isPinned: boolean;
 }
 
 const projectSchema = new mongoose.Schema(
@@ -102,6 +103,10 @@ const projectSchema = new mongoose.Schema(
         trim: true,
       },
     ],
+    isPinned: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
