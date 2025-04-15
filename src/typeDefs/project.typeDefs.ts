@@ -23,6 +23,11 @@ type DraftUi {
   public_id: String!
 }
 
+type Tutorials{
+  url:String!
+  label:String!
+}
+
 type Links {
   source: String
   deployment: String
@@ -34,16 +39,16 @@ type Project {
   projectName: String!
   description: String!
   motive: String
-  category: CategoryType
-  status: StatusType
+  category: CategoryType!
+  status: StatusType!
   startDate: String
   deadline: String
   techStack: [String]
   features: [String]
   draftUi: [DraftUi]
   links: Links
-  tutorials: [String]
-  isPinned: Boolean
+  tutorials: [Tutorials]
+  isPinned: Boolean!
 }
 
 type Query {
@@ -56,18 +61,24 @@ input LinksInput {
   source: String
   deployment: String
 }
+input TutorialsInput{
+  label:String!
+  url:String!
+}
 
 type Mutation {
   createProject(
     projectName: String!
     description: String!
     motive: String
+    category:CategoryType
+    status:StatusType
     techStack: [String]
     features: [String]
     startDate: String
-    deadLine: String
+    deadline: String
     links: LinksInput
-    tutorials: [String]
+    tutorials: [TutorialsInput]
   ): Project
 }`;
 

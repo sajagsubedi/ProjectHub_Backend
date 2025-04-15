@@ -4,7 +4,7 @@ import { CategoryType, StatusType } from "../types/project.types";
 export interface Project extends mongoose.Document {
   userId: mongoose.Schema.Types.ObjectId;
   projectName: string;
-  description?: string;
+  description: string;
   motive?: string;
   category?: CategoryType;
   status?: StatusType;
@@ -20,7 +20,10 @@ export interface Project extends mongoose.Document {
     source?: string;
     deployment?: string;
   };
-  tutorials?: string[];
+  tutorials?: {
+    label: string;
+    url: string;
+  }[];
   isPinned: boolean;
 }
 
@@ -97,12 +100,20 @@ const projectSchema = new mongoose.Schema(
         trim: true,
       },
     },
-    tutorials: [
-      {
-        type: String, // Links to tutorials or guides
-        trim: true,
-      },
-    ],
+    tutorials: {
+      type: [
+        {
+          label: {
+            type: String,
+            trim: true,
+          },
+          url: {
+            type: String,
+            trim: true,
+          },
+        },
+      ],
+    },
     isPinned: {
       type: Boolean,
       default: false,

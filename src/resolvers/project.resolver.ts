@@ -46,6 +46,7 @@ const projectResolver = {
         _id: new mongoose.Types.ObjectId(id),
         userId: user._id,
       });
+      console.log(existingProject);
       return existingProject; // Return Project (nullable)
     },
     getPinnedProjects: async (_: any, __: any, { user }: { user: User }) => {
@@ -85,6 +86,7 @@ const projectResolver = {
           },
         });
       }
+      console.log(args)
       const createdProject = await ProjectModel.create({
         ...args,
         userId: user._id,

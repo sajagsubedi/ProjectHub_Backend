@@ -28,5 +28,8 @@ export interface createProjectInputType {
     source?: string;
     deployment?: string;
   };
-  tutorials?: string[];
+  tutorials?: {
+    url: string;
+    label: string;
+  }[];
 }
