@@ -11,7 +11,6 @@ import { CloudinaryUploadResult } from "../types/upload.types";
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as "lax",
 };
 
 const accessCookieOptions = {
@@ -226,11 +225,11 @@ const userResolver = {
       // Generate access token
       const accessToken = existingUser.generateAccessToken();
 
-      console.log("Access token generated!")
+      console.log("Access token generated!");
       // Set access token in cookie
       res.cookie("accessToken", accessToken, accessCookieOptions);
 
-      return { accessToken }; 
+      return { accessToken };
     },
   },
 };
