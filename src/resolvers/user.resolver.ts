@@ -1,18 +1,34 @@
 import { GraphQLError } from "graphql";
 import { verifyRefreshToken } from "../middlewares/verifyRefreshToken";
-import UserModel from "../models/user.model";
+import UserModel, { User } from "../models/user.model";
 import { SignupInputType, SigninInputType } from "../types/user.types";
 import { Response, Request } from "express";
 import { GraphQLUpload } from "graphql-upload-minimal";
 import cloudinary from "../utils/cloudinary";
 import { CloudinaryUploadResult } from "../types/upload.types";
 
+//cookie options
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as "lax",
+};
+
+const accessCookieOptions = {
+  ...cookieOptions,
+  maxAge: (Number(process.env.ACCESS_TOKEN_EXPIRY) || 60 * 60) * 1000, // 1 hour expressed in milliseconds
+};
+
+const refreshCookieOptions = {
+  ...cookieOptions,
+  maxAge: (Number(process.env.REFRESH_TOKEN_EXPIRY) || 60 * 60 * 24 * 7) * 1000, // 7 days expressed in milliseconds
+};
+
+//resolver
 const userResolver = {
   Upload: GraphQLUpload,
   Query: {
-    authUser: async (_: any, __: any, { req }: { req: Request }) => {
-      // Fetch the user
-      const user = await verifyRefreshToken(req);
+    authUser: async (_: any, __: any, { user }: { user: User }) => {
       if (!user) {
         throw new GraphQLError("You are not logged in", {
           extensions: {
@@ -21,19 +37,7 @@ const userResolver = {
         });
       }
 
-      // Fetch the user without password and refreshToken
-      const existingUser = await UserModel.findById(user._id).select(
-        "-password -refreshToken"
-      );
-      if (!existingUser) {
-        throw new GraphQLError("User not found", {
-          extensions: {
-            code: "NOT_FOUND",
-          },
-        });
-      }
-
-      return existingUser; // Return UserPublic directly
+      return user; // Return UserPublic directly
     },
   },
   Mutation: {
@@ -41,7 +45,9 @@ const userResolver = {
       const { fullName, email, username, password, avatar } = args;
 
       // Input validation
-      if ([username, email, fullName, password].some((field) => !field?.trim())) {
+      if (
+        [username, email, fullName, password].some((field) => !field?.trim())
+      ) {
         throw new GraphQLError("All fields are required", {
           extensions: {
             code: "BAD_REQUEST",
@@ -65,7 +71,10 @@ const userResolver = {
       if (existingUser) {
         throw new GraphQLError("Username or email already exists", {
           extensions: {
-            code: existingUser.email === email ? "EMAIL_ALREADY_EXISTS" : "USERNAME_ALREADY_EXISTS",
+            code:
+              existingUser.email === email
+                ? "EMAIL_ALREADY_EXISTS"
+                : "USERNAME_ALREADY_EXISTS",
             field: existingUser.email === email ? "email" : "username",
           },
         });
@@ -73,14 +82,16 @@ const userResolver = {
 
       // Handle avatar upload to Cloudinary
       const { createReadStream } = await avatar;
-      const result = await new Promise<CloudinaryUploadResult>((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          { folder: "projecthub", resource_type: "image" },
-          (error, result) =>
-            error ? reject(error) : resolve(result as CloudinaryUploadResult)
-        );
-        createReadStream().pipe(uploadStream).on("error", reject);
-      });
+      const result = await new Promise<CloudinaryUploadResult>(
+        (resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            { folder: "projecthub", resource_type: "image" },
+            (error, result) =>
+              error ? reject(error) : resolve(result as CloudinaryUploadResult)
+          );
+          createReadStream().pipe(uploadStream).on("error", reject);
+        }
+      );
 
       // Create user
       const user = await UserModel.create({
@@ -104,7 +115,11 @@ const userResolver = {
 
       return createdUser; // Return UserPublic directly
     },
-    signin: async (_: any, args: SigninInputType, { res }: { res: Response }) => {
+    signin: async (
+      _: any,
+      args: SigninInputType,
+      { res }: { res: Response }
+    ) => {
       const { identifier, password } = args;
 
       // Check if any fields are empty
@@ -122,12 +137,15 @@ const userResolver = {
         $or: [{ username: identifier }, { email: identifier }],
       });
       if (!existingUser) {
-        throw new GraphQLError("User does not exist with the given username or email", {
-          extensions: {
-            code: "NOT_FOUND",
-            field: "identifier",
-          },
-        });
+        throw new GraphQLError(
+          "User does not exist with the given username or email",
+          {
+            extensions: {
+              code: "NOT_FOUND",
+              field: "identifier",
+            },
+          }
+        );
       }
 
       // Check if the password is correct
@@ -149,18 +167,17 @@ const userResolver = {
       existingUser.refreshToken = refreshToken;
       await existingUser.save();
 
-      const cookieOptions = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-      };
-
       // Set cookies
-      res.cookie("refreshToken", refreshToken, cookieOptions);
-      res.cookie("accessToken", accessToken, cookieOptions);
+      res.cookie("accessToken", accessToken, accessCookieOptions);
+      res.cookie("refreshToken", refreshToken, refreshCookieOptions);
 
-      return { refreshToken, accessToken }; // Return SigninResponse
+      return { accessToken }; // Return SigninResponse
     },
-    signout: async (_: any, __: any, { req, res }: { req: Request; res: Response }) => {
+    signout: async (
+      _: any,
+      __: any,
+      { req, res }: { req: Request; res: Response }
+    ) => {
       // Fetch the user
       const user = await verifyRefreshToken(req);
       if (!user) {
@@ -185,24 +202,23 @@ const userResolver = {
         });
       }
 
-      const cookieOptions = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-      };
-
       // Clear cookies
-      res.clearCookie("refreshToken", cookieOptions);
-      res.clearCookie("accessToken", cookieOptions);
+      res.clearCookie("refreshToken", refreshCookieOptions);
+      res.clearCookie("accessToken", accessCookieOptions);
 
       return updatedUser; // Return UserPublic
     },
-    refetchAccessToken: async (_: any, __: any, { req, res }: { req: Request; res: Response }) => {
+    refetchAccessToken: async (
+      _: any,
+      __: any,
+      { req, res }: { req: Request; res: Response }
+    ) => {
       // Fetch the user
       const existingUser = await verifyRefreshToken(req);
       if (!existingUser) {
         throw new GraphQLError("You are not logged in", {
           extensions: {
-            code: "UNAUTHORIZED",
+            code: "UNAUTHENTICATED",
           },
         });
       }
@@ -210,15 +226,11 @@ const userResolver = {
       // Generate access token
       const accessToken = existingUser.generateAccessToken();
 
-      const cookieOptions = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-      };
-
+      console.log("Access token generated!")
       // Set access token in cookie
-      res.cookie("accessToken", accessToken, cookieOptions);
+      res.cookie("accessToken", accessToken, accessCookieOptions);
 
-      return { accessToken }; // Return RefetchAccessTokenResponse
+      return { accessToken }; 
     },
   },
 };

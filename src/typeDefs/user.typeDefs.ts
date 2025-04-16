@@ -15,12 +15,7 @@ type UserPublic {
   updatedAt: String
 }
 
-type SigninResponse {
-  refreshToken: String
-  accessToken: String
-}
-
-type RefetchAccessTokenResponse {
+type AuthResponse {
   accessToken: String
 }
 
@@ -41,9 +36,9 @@ type Mutation {
   signin(
     identifier: String!
     password: String!
-  ): SigninResponse!
+  ): AuthResponse!
   signout: UserPublic!
-  refetchAccessToken: RefetchAccessTokenResponse!
+  refetchAccessToken: AuthResponse!
 }
 `;
 

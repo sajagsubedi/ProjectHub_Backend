@@ -7,7 +7,7 @@ interface CustomJwtPayload extends JwtPayload {
 }
 
 export const verifyRefreshToken = async (req: Request) => {
-  const token = req.headers?.refreshToken || req.cookies?.refreshToken;
+  const token = req.cookies?.refreshToken;
   if (!token) {
     return null;
   }
@@ -24,10 +24,10 @@ export const verifyRefreshToken = async (req: Request) => {
     if (!existingUser) {
       return null;
     }
-
     if (existingUser.refreshToken != token) {
       return null;
     }
+    console.log("Verified refresh token")
     return existingUser;
   } catch (error) {
     return null;

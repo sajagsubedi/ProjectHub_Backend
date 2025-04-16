@@ -14,11 +14,10 @@ const projectResolver = {
           },
         });
       }
-      console.log(user);
       // Fetch all projects from the database
       const projects = await ProjectModel.find({
         userId: user._id,
-      });
+      }).sort({ updatedAt: -1 });
       return projects; // Return [Project]
     },
     getProjectById: async (
@@ -46,7 +45,6 @@ const projectResolver = {
         _id: new mongoose.Types.ObjectId(id),
         userId: user._id,
       });
-      console.log(existingProject);
       return existingProject; // Return Project (nullable)
     },
     getPinnedProjects: async (_: any, __: any, { user }: { user: User }) => {
@@ -86,12 +84,10 @@ const projectResolver = {
           },
         });
       }
-      console.log(args)
       const createdProject = await ProjectModel.create({
         ...args,
         userId: user._id,
       });
-      console.log("Created Project", createdProject);
       return createdProject; // Return Project
     },
   },

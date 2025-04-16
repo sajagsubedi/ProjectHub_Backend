@@ -82,7 +82,7 @@ userSchema.methods.generateAccessToken = function () {
     },
     process.env.ACCESS_TOKEN_SECRET || "projecthub123",
     {
-      expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRY) || 3600, // 1 hour
+      expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRY) || 60 * 60, // 1 hour
     }
   );
 };
@@ -94,7 +94,7 @@ userSchema.methods.generateRefreshToken = function () {
     },
     process.env.REFRESH_TOKEN_SECRET || "projecthub123",
     {
-      expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRY) || 604800, // 7 days   ,
+      expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRY) || 60 * 60 * 24 * 7, // 7 days   ,
     }
   );
 };
