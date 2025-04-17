@@ -11,6 +11,10 @@ import { CloudinaryUploadResult } from "../types/upload.types";
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
+  sameSite:
+    process.env.NODE_ENV === "production"
+      ? ("none" as "none")
+      : ("lax" as "lax"),
 };
 
 const accessCookieOptions = {
@@ -217,7 +221,7 @@ const userResolver = {
       if (!existingUser) {
         throw new GraphQLError("You are not logged in", {
           extensions: {
-            code: "UNAUTHENTICATED",
+            code: "UNAUTHORIZED",
           },
         });
       }
@@ -226,6 +230,7 @@ const userResolver = {
       const accessToken = existingUser.generateAccessToken();
 
       console.log("Access token generated!");
+
       // Set access token in cookie
       res.cookie("accessToken", accessToken, accessCookieOptions);
 
