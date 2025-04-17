@@ -15,6 +15,7 @@ export const verifyAuth = async (req: Request) => {
   console.log("token is ", token, " from ", new Date().toLocaleString());
   console.log(req.body);
   console.log("------------------------------\n\n")
+  
   if (!token) {
     return null;
   }
@@ -23,14 +24,9 @@ export const verifyAuth = async (req: Request) => {
       token,
       process.env.ACCESS_TOKEN_SECRET || "projecthub123"
     ) as CustomJwtPayload;
-    console.log(
-      "Expires in",
-      new Date(decoded.exp ? decoded.exp * 1000 : "").toLocaleString()
-    );
     const existingUser = await UserModel.findById(decoded?._id).select(
       "-password -refreshToken"
     );
-
     if (!existingUser) {
       return null;
     }
