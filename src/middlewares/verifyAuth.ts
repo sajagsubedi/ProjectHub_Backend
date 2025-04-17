@@ -1,5 +1,6 @@
 import { Request } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+import type { JwtPayload } from "jsonwebtoken";
 import UserModel from "../models/user.model";
 
 interface CustomJwtPayload extends JwtPayload {
@@ -15,7 +16,7 @@ export const verifyAuth = async (req: Request) => {
   console.log("token is ", token, " from ", new Date().toLocaleString());
   console.log(req.body);
   console.log("------------------------------\n\n")
-  
+
   if (!token) {
     return null;
   }
