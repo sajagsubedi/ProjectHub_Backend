@@ -61,9 +61,16 @@ input LinksInput {
   source: String
   deployment: String
 }
+
 input TutorialsInput{
   label:String!
   url:String!
+}
+
+input DraftUiOrderInput {
+  url: String
+  public_id: String
+  index_id: Int
 }
 
 type Mutation {
@@ -100,6 +107,11 @@ type Mutation {
   pinProject(id: ID!): Project
 
   deleteProject(id: ID!): Project
+  editDraftUi(
+    id: ID!
+    files: [Upload]!
+    order: [DraftUiOrderInput]!
+  ): Project
 }
 `;
 

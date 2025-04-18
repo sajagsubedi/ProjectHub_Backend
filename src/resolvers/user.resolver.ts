@@ -229,8 +229,6 @@ const userResolver = {
       // Generate access token
       const accessToken = existingUser.generateAccessToken();
 
-      console.log("Access token generated!");
-
       // Set access token in cookie
       res.cookie("accessToken", accessToken, accessCookieOptions);
 

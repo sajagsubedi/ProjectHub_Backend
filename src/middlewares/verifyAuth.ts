@@ -12,10 +12,6 @@ interface CustomJwtPayload extends JwtPayload {
 
 export const verifyAuth = async (req: Request) => {
   const token = req.cookies?.accessToken;
-  console.log("--------------------------------")
-  console.log("token is ", token, " from ", new Date().toLocaleString());
-  console.log(req.body);
-  console.log("------------------------------\n\n")
 
   if (!token) {
     return null;

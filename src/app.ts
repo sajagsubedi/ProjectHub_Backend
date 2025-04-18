@@ -34,7 +34,7 @@ const startServer = async () => {
   // File upload middleware - must come before expressMiddleware
   app.use(
     graphqlUploadExpress({
-      maxFileSize: 10000000, // 10MB limit
+      maxFileSize: 30000000, // 30MB limit
     })
   );
 

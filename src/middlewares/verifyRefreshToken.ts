@@ -27,7 +27,6 @@ export const verifyRefreshToken = async (req: Request) => {
     if (existingUser.refreshToken != token) {
       return null;
     }
-    console.log("Verified refresh token")
     return existingUser;
   } catch (error) {
     return null;
