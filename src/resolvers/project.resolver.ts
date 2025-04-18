@@ -242,6 +242,11 @@ const projectResolver = {
       // Delete the project
       const deletedProject = await ProjectModel.findByIdAndDelete(id);
 
+      //delete draft ui images from cloudinary
+      deletedProject?.draftUi?.map(async (image) => {
+        await cloudinary.uploader.destroy(image.public_id);
+      });
+
       return deletedProject;
     },
     editDraftUi: async (
