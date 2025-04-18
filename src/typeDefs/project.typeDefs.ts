@@ -96,7 +96,10 @@ type Mutation {
     tutorials: [TutorialsInput]
     isPinned: Boolean
   ): Project
+
   pinProject(id: ID!): Project
+
+  deleteProject(id: ID!): Project
 }
 `;
 
