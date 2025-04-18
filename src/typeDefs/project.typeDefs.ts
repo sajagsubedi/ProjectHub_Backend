@@ -80,6 +80,24 @@ type Mutation {
     links: LinksInput
     tutorials: [TutorialsInput]
   ): Project
-}`;
+
+  editProject(
+    id: ID!
+    projectName: String
+    description: String
+    motive: String
+    category: CategoryType
+    status: StatusType
+    techStack: [String]
+    features: [String]
+    startDate: String
+    deadline: String
+    links: LinksInput
+    tutorials: [TutorialsInput]
+    isPinned: Boolean
+  ): Project
+  pinProject(id: ID!): Project
+}
+`;
 
 export default projectTypeDefs;

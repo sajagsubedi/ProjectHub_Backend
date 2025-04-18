@@ -17,7 +17,7 @@ const projectResolver = {
       // Fetch all projects from the database
       const projects = await ProjectModel.find({
         userId: user._id,
-      }).sort({ updatedAt: -1 });
+      }).sort({ isPinned: -1, updatedAt: -1 });
       return projects; // Return [Project]
     },
     getProjectById: async (
@@ -89,6 +89,115 @@ const projectResolver = {
         userId: user._id,
       });
       return createdProject; // Return Project
+    },
+    editProject: async (
+      _: any,
+      args: { id: string } & Partial<createProjectInputType> & {
+          isPinned?: boolean;
+        },
+      { user }: { user: User }
+    ) => {
+      if (!user) {
+        throw new GraphQLError("Unauthorized access", {
+          extensions: {
+            code: "UNAUTHORIZED",
+          },
+        });
+      }
+
+      const { id, ...updateData } = args;
+
+      if (!mongoose.isValidObjectId(id)) {
+        throw new GraphQLError("Invalid Project id", {
+          extensions: {
+            code: "BAD_REQUEST",
+            field: "id",
+          },
+        });
+      }
+
+      // Check if project exists and belongs to the user
+      const existingProject = await ProjectModel.findOne({
+        _id: new mongoose.Types.ObjectId(id),
+        userId: user._id,
+      });
+
+      if (!existingProject) {
+        throw new GraphQLError("Project not found", {
+          extensions: {
+            code: "NOT_FOUND",
+          },
+        });
+      }
+
+      // Update the project
+      const updatedProject = await ProjectModel.findByIdAndUpdate(
+        id,
+        { $set: updateData },
+        { new: true }
+      );
+
+      return updatedProject;
+    },
+    pinProject: async (
+      _: any,
+      args: { id: string },
+      { user }: { user: User }
+    ) => {
+      if (!user) {
+        throw new GraphQLError("Unauthorized access", {
+          extensions: {
+            code: "UNAUTHORIZED",
+          },
+        });
+      }
+
+      const { id } = args;
+
+      if (!mongoose.isValidObjectId(id)) {
+        throw new GraphQLError("Invalid Project id", {
+          extensions: {
+            code: "BAD_REQUEST",
+            field: "id",
+          },
+        });
+      }
+
+      // Check if project exists and belongs to the user
+      const existingProject = await ProjectModel.findOne({
+        _id: new mongoose.Types.ObjectId(id),
+        userId: user._id,
+      });
+
+      if (!existingProject) {
+        throw new GraphQLError("Project not found", {
+          extensions: {
+            code: "NOT_FOUND",
+          },
+        });
+      }
+
+      // Check if user already has 3 pinned projects
+      const pinnedProjects = await ProjectModel.find({
+        isPinned: true,
+        userId: user._id,
+      });
+
+      // If trying to pin a new project and already have 3 pinned
+      if (!existingProject.isPinned && pinnedProjects.length >= 3) {
+        throw new GraphQLError("Maximum limit of 3 pinned projects reached", {
+          extensions: {
+            code: "BAD_REQUEST",
+            field: "isPinned",
+          },
+        });
+      }
+
+      // Toggle the isPinned status
+      existingProject.isPinned = !existingProject.isPinned;
+      await existingProject.save();
+
+      return existingProject;
     },
   },
 };
